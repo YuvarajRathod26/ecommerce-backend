@@ -1,58 +1,54 @@
 package com.ecommerce.service;
 
-import com.ecommerce.controller.CustomerController;
 import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.ecommerce.dto.CustomerRequestDTO;
+import com.ecommerce.dto.CustomerResponseDTO;
 import com.ecommerce.entity.Customer;
 import com.ecommerce.exception.CustomerNotFoundException;
 import com.ecommerce.repository.CustomerRepository;
 
 @Service
 public class CustomerService {
-	@Autowired
-	private CustomerRepository crepo;
 
-	public Customer saveCustomer(Customer customer) {
-		return crepo.save(customer);
+	private final CustomerRepository crepo;
+
+	public CustomerService(CustomerRepository crepo) {
+		this.crepo = crepo;
 	}
 
-	public List<Customer> findAllCustomers() {
-		return crepo.findAll();
+	public CustomerResponseDTO saveCustomer(CustomerRequestDTO requestDTO) {
+	    Customer customer = convertToEntity(requestDTO);
+	    Customer savedCustomer = crepo.save(customer);
+	    return convertToDTO(savedCustomer);
 	}
 
-	public Customer findCustomerById(Long id) {
+	public List<CustomerResponseDTO> findAllCustomers() {
+		List<Customer> customers = crepo.findAll();
+		return customers.stream().map(this::convertToDTO).toList();
+	}
 
-		Optional<Customer> optionalCustomer = crepo.findById(id);
-		if (optionalCustomer.isEmpty()) {
-			throw new CustomerNotFoundException("Customer not found with id: " + id);
-		}
+	public CustomerResponseDTO findCustomerById(Long id) {
 
-		return optionalCustomer.get();
+		Customer customer = crepo.findById(id)
+				.orElseThrow(() -> new CustomerNotFoundException("Customer not found with id: " + id));
+
+		return convertToDTO(customer);
 	}
 
 	public void deleteCustomer(Long id) {
-		Optional<Customer> optionalCustomer = crepo.findById(id);
 
-		if (optionalCustomer.isEmpty()) {
-			throw new CustomerNotFoundException("Customer with id " + id + " not found");
-		}
+		Customer customer = crepo.findById(id)
+				.orElseThrow(() -> new CustomerNotFoundException("Customer not found with id: " + id));
 
-		crepo.deleteById(id);
+		crepo.delete(customer);
 	}
 
 	public Customer updateCustomer(Long id, Customer customer) {
 
-		Optional<Customer> optionalCustomer = crepo.findById(id);
-
-		if (optionalCustomer.isEmpty()) {
-			throw new CustomerNotFoundException("Customer with id " + id + " not found");
-		}
-
-		Customer existingCustomer = optionalCustomer.get();
+		Customer existingCustomer = crepo.findById(id)
+				.orElseThrow(() -> new CustomerNotFoundException("Customer not found with id: " + id));
 
 		existingCustomer.setName(customer.getName());
 		existingCustomer.setEmail(customer.getEmail());
@@ -60,5 +56,29 @@ public class CustomerService {
 		existingCustomer.setPhone(customer.getPhone());
 
 		return crepo.save(existingCustomer);
+	}
+
+	private CustomerResponseDTO convertToDTO(Customer customer) {
+
+		CustomerResponseDTO response = new CustomerResponseDTO();
+
+		response.setId(customer.getId());
+		response.setName(customer.getName());
+		response.setEmail(customer.getEmail());
+		response.setPhone(customer.getPhone());
+
+		return response;
+	}
+	
+	private Customer convertToEntity(CustomerRequestDTO requestDTO) {
+
+	    Customer customer = new Customer();
+
+	    customer.setName(requestDTO.getName());
+	    customer.setEmail(requestDTO.getEmail());
+	    customer.setPassword(requestDTO.getPassword());
+	    customer.setPhone(requestDTO.getPhone());
+
+	    return customer;
 	}
 }
