@@ -19,9 +19,9 @@ public class CustomerService {
 	}
 
 	public CustomerResponseDTO saveCustomer(CustomerRequestDTO requestDTO) {
-	    Customer customer = convertToEntity(requestDTO);
-	    Customer savedCustomer = crepo.save(customer);
-	    return convertToDTO(savedCustomer);
+		Customer customer = convertToEntity(requestDTO);
+		Customer savedCustomer = crepo.save(customer);
+		return convertToDTO(savedCustomer);
 	}
 
 	public List<CustomerResponseDTO> findAllCustomers() {
@@ -45,17 +45,18 @@ public class CustomerService {
 		crepo.delete(customer);
 	}
 
-	public Customer updateCustomer(Long id, Customer customer) {
-
+	public CustomerResponseDTO updateCustomer(Long id, CustomerRequestDTO requestDTO) {
 		Customer existingCustomer = crepo.findById(id)
 				.orElseThrow(() -> new CustomerNotFoundException("Customer not found with id: " + id));
 
-		existingCustomer.setName(customer.getName());
-		existingCustomer.setEmail(customer.getEmail());
-		existingCustomer.setPassword(customer.getPassword());
-		existingCustomer.setPhone(customer.getPhone());
+		existingCustomer.setName(requestDTO.getName());
+		existingCustomer.setEmail(requestDTO.getEmail());
+		existingCustomer.setPassword(requestDTO.getPassword());
+		existingCustomer.setPhone(requestDTO.getPhone());
 
-		return crepo.save(existingCustomer);
+		Customer updatedCustomer = crepo.save(existingCustomer);
+
+		return convertToDTO(updatedCustomer);
 	}
 
 	private CustomerResponseDTO convertToDTO(Customer customer) {
@@ -69,16 +70,16 @@ public class CustomerService {
 
 		return response;
 	}
-	
+
 	private Customer convertToEntity(CustomerRequestDTO requestDTO) {
 
-	    Customer customer = new Customer();
+		Customer customer = new Customer();
 
-	    customer.setName(requestDTO.getName());
-	    customer.setEmail(requestDTO.getEmail());
-	    customer.setPassword(requestDTO.getPassword());
-	    customer.setPhone(requestDTO.getPhone());
+		customer.setName(requestDTO.getName());
+		customer.setEmail(requestDTO.getEmail());
+		customer.setPassword(requestDTO.getPassword());
+		customer.setPhone(requestDTO.getPhone());
 
-	    return customer;
+		return customer;
 	}
 }
